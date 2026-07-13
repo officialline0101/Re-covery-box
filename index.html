@@ -60,6 +60,8 @@
         }
 
         .visit-buttons,
+        .age-buttons,
+        .people-buttons,
         .symptoms,
         .menu-sections,
         .irradiations {
@@ -70,6 +72,8 @@
         }
 
         .visit-buttons button,
+        .age-buttons button,
+        .people-buttons button,
         .symptoms button,
         .menu-sections button,
         .irradiations button {
@@ -85,11 +89,44 @@
         }
 
         .visit-buttons button.active,
+        .age-buttons button.active,
+        .people-buttons button.active,
         .symptoms button.active,
         .menu-sections button.active,
         .irradiations button.active {
             background-color: #444;
             color: #fff;
+        }
+
+        /* 新規の方のみ表示する「未成年／成人」セクション */
+        #ageLabel,
+        #ageButtons,
+        #minorNote {
+            display: none;
+        }
+
+        #minorNote {
+            background-color: #fff3f3;
+            border: 1px solid #e57373;
+            color: #c62828;
+            font-weight: bold;
+        }
+
+        /* 電話発信ボタン */
+        .tel-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 4px;
+            background-color: #06c755;
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+            box-sizing: border-box;
         }
 
         .date-inputs input[type="datetime-local"] {
@@ -364,8 +401,22 @@
 
         <div class="label">ご来店回数※必須</div>
         <div class="visit-buttons">
-            <button type="button" id="firstVisit" onclick="selectVisit(this)">1回目</button>
+            <button type="button" id="firstVisit" onclick="selectVisit(this)">1回目（新規）</button>
             <button type="button" id="repeatVisit" onclick="selectVisit(this)">2回目以降</button>
+        </div>
+
+        <div class="label" id="ageLabel">未成年／成人※新規の方は必須</div>
+        <div class="age-buttons" id="ageButtons">
+            <button type="button" id="minorButton" onclick="selectAge(this)">未成年</button>
+            <button type="button" id="adultButton" onclick="selectAge(this)">成人</button>
+        </div>
+        <div class="info-text" id="minorNote">【未成年】をお選びの方<br>※初回に必ず同意書が必要になりますので<br>保護者の同伴が必要となります。</div>
+
+        <div class="label">ご利用人数※必須</div>
+        <div class="people-buttons">
+            <button type="button" id="people1" onclick="selectPeople(this)">1人</button>
+            <button type="button" id="people2" onclick="selectPeople(this)">2人</button>
+            <button type="button" id="people3" onclick="selectPeople(this)">3人</button>
         </div>
 
         <div class="label">メニューをお選びください</div>
@@ -385,6 +436,8 @@
 
         <div class="label">希望日時</div>
         <div class="info-text">※３０分前の予約については<br>お電話もしくはチャットでお問い合わせください。</div>
+        <div class="info-text">ご希望の日時が❌の場合でもご予約できる場合がございますので<br>以下のボタンをタップでお電話ください</div>
+        <a class="tel-button" href="tel:07033424246">📞 070-3342-4246</a>
         <div class="calendar-container">
             <div class="week-button-container">
                 <button class="week-button" onclick="previousWeek()">前の週<br>←</button>
@@ -451,11 +504,13 @@
 
         // 訪問回数ごとの時間設定 (例：初めて=20分、2回目以降=15分)
         let visitTimes = {
-            '1回目': 0,
+            '1回目（新規）': 0,
             '2回目以降': 0
         };
 
         let selectedVisitTime = 0; // 訪問回数で選択された時間
+        let ageCategory = ''; // 未成年／成人（新規の方のみ）
+        let peopleCount = ''; // ご利用人数
 
         // 訪問回数ごとの時間設定 (例：初めて=20分、2回目以降=15分)
         let irradiationsTimes = {
@@ -493,6 +548,15 @@
             const name = document.getElementById('name').value;
             const visitCountText = visitCount ? `・<span style="color:#5572d9;"><strong>ご来店回数</strong></span>：${visitCount}` : '・来店回数が未選択です';
 
+            // 新規の方のみ「未成年／成人」を表示
+            const ageCategoryText = ageCategory
+                ? `・<span style="color:#5572d9;"><strong>区分</strong></span>：${ageCategory}`
+                : '・区分が未選択です';
+
+            const peopleCountText = peopleCount
+                ? `・<span style="color:#5572d9;"><strong>ご利用人数</strong></span>：${peopleCount}`
+                : '・ご利用人数が未選択です';
+
             // メニューが選択されていたら、各メニューを改行して表示
             const selectedSymptomText = selectedSymptom.length > 0
                 ? `<span style="color:#5572d9;"><strong>【メニュー】</strong></span><br>・${selectedSymptom.join('<br>')}`
@@ -522,6 +586,9 @@
         <p>・<span style="color:#5572d9;"><strong>お名前</strong></span>：${name}</p>
         <hr>
         <p>${visitCountText}</p>
+        <hr>
+        ${visitCount === '1回目（新規）' ? `<p>${ageCategoryText}</p><hr>` : ''}
+        <p>${peopleCountText}</p>
         <hr>
         <p>${selectedSymptomText}</p>
         <hr>
@@ -682,6 +749,40 @@
             updateDisplayInfo(); // 表示を更新
         }
 
+        // 新規（1回目）を選んだときだけ「未成年／成人」を表示する
+        function toggleAgeSection() {
+            const isNew = document.getElementById('firstVisit').classList.contains('active');
+            const display = isNew ? 'block' : 'none';
+
+            document.getElementById('ageLabel').style.display = display;
+            document.getElementById('ageButtons').style.display = isNew ? 'flex' : 'none';
+            document.getElementById('minorNote').style.display = display;
+
+            if (!isNew) {
+                // 新規以外に切り替えた場合は選択をリセット
+                ageCategory = '';
+                document.getElementById('minorButton').classList.remove('active');
+                document.getElementById('adultButton').classList.remove('active');
+            }
+        }
+
+        function selectAge(element) {
+            document.getElementById('minorButton').classList.remove('active');
+            document.getElementById('adultButton').classList.remove('active');
+            element.classList.add('active');
+            ageCategory = element.innerText;
+
+            updateDisplayInfo();
+        }
+
+        function selectPeople(element) {
+            document.querySelectorAll('.people-buttons button').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            peopleCount = element.innerText;
+
+            updateDisplayInfo();
+        }
+
         function selectVisit(element) {
             // 選択された日時をリセット
             selectedFullDate = '';
@@ -691,8 +792,11 @@
             element.classList.add('active');
             visitCount = element.innerText;
 
+            // 新規の場合のみ「未成年／成人」の選択欄を表示
+            toggleAgeSection();
+
             // 選択された訪問回数に対応する時間を取得
-            selectedVisitTime = visitTimes[visitCount];
+            selectedVisitTime = visitTimes[visitCount] || 0;
 
             console.log('選択された訪問回数の時間:', selectedVisitTime);
 
@@ -730,6 +834,8 @@
                 name: document.getElementById('name').value.trim(),
                 phone: document.getElementById('phone').value.trim(),
                 visitCount: visitCount,
+                ageCategory: ageCategory, // 未成年／成人（新規の方のみ）
+                peopleCount: peopleCount, // ご利用人数
                 selectedSymptom: selectedSymptom && selectedSymptom.length > 0 ? selectedSymptom : null, // 空の選択肢をチェック
                 irradiationsCount: irradiationsCount,
                 dates: selectedFullDate ? [selectedFullDate] : null, // 空チェック
@@ -747,6 +853,21 @@
                 return;
             }
 
+            if (!formData.visitCount) {
+                alert('ご来店回数を選択してください。');
+                return;
+            }
+
+            if (formData.visitCount === '1回目（新規）' && !formData.ageCategory) {
+                alert('「未成年」か「成人」を選択してください。');
+                return;
+            }
+
+            if (!formData.peopleCount) {
+                alert('ご利用人数を選択してください。');
+                return;
+            }
+
             if (!formData.selectedSymptom) {
                 alert('メニューを選択してください。');
                 return;
@@ -760,7 +881,7 @@
             // LINEトークにメッセージを送信
             liff.sendMessages([{
                 type: 'text',
-                text: `【予約フォーム】\n予約：ボックス\nお名前：${formData.name}\n電話番号：${formData.phone}\nご来店回数：${formData.visitCount}\nメニュー：${formData.selectedSymptom},${formData.irradiationsCount}\n希望日時：\n ${formData.dates[0]}\nメッセージ：${formData.message}`
+                text: `【予約フォーム】\n予約：ボックス\nお名前：${formData.name}\n電話番号：${formData.phone}\nご来店回数：${formData.visitCount}${formData.ageCategory ? `\n区分：${formData.ageCategory}` : ''}\nご利用人数：${formData.peopleCount}\nメニュー：${formData.selectedSymptom},${formData.irradiationsCount}\n希望日時：\n ${formData.dates[0]}\nメッセージ：${formData.message}`
             }]).then(() => {
                 /* メッセージ送信成功時の処理 */
                 alert('当日キャンセルは無いようにお願いいたします。');
