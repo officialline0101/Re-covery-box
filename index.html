@@ -1053,7 +1053,9 @@ for (let i = 0; i < 7; i++) {
 let limitTime = new Date(now);
 limitTime.setMinutes(now.getMinutes() + 30);
 
-if (slotStart < limitTime) {
+// 現在時刻から30分後ちょうどの枠も予約不可にする
+// 例）現在10:00 → 10:30は✕、次に予約できるのは10:31以降
+if (slotStart <= limitTime) {
     cell.textContent = '✕';
     cell.classList.add('unavailable');
     continue;
